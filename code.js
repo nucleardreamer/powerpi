@@ -3,11 +3,11 @@ var request = require('request'),
     async = require('async'),
 
     Gpio = require('onoff').Gpio,
-    relay = new Gpio(21, 'out'),
+    led0 = new Gpio(21, 'out'),
     led1 = new Gpio(16, 'out'),
     led2 = new Gpio(20, 'out'),
-    timeDuration = 300,
-    reduction = 0.1,
+    button = new GPIO(12, 'in', 'both'),
+    timeDuration = 300,  //300 seconds = 5 minutes
     reductionTime = Math.round(timeDuration * reduction),
     offStart = 0,
     offEnd = 0,
@@ -21,12 +21,19 @@ var request = require('request'),
 
     Lcd = require('lcd'),
     lcd = new Lcd({
-    rs:22,
-    e:5,
-    data:[6, 13, 19, 26],
-    cols:16,
-    rows:2
-    });
+        rs:22,
+        e:5,
+        data:[6, 13, 19, 26],
+        cols:16,
+        rows:2
+    }),
+    displayTop = 'top',
+    displayBottom = 'bottom',
+    
+    reduction = 0.1,
+    menuState = 1,
+    ipAddress = 'unknown'
+    counter = 0;
 
 var read = {
     // this function will hold all operations that read from any sensor
@@ -84,15 +91,69 @@ var write = {
 // main init function
 var init = function(){
 
-    // 1 second updates
     setInterval(function () {
         read.fromTempSensor(adc0, function(valueFromSensor){
             write.toServer(0, valueFromSensor);
         });
     }, 1000);
     
+    setInterval(function(){
+    //turns the relay on and off between the values offStart and offEnd
+        if(relayCounter >= offStart && relayCounter <= offEnd){
+            relayState = 0;
+            led0.writeSync(relayState);
+            led1.writeSync(1);
+            //console.log('****turn relay off****');
+            } else{
+                relayState = 1;
+                relay.writeSync(relayState);
+                led1.writeSync(0);
+            }
+        //main counter
+        //makes new random interval for every 5 minute cycle
+        if(relayCounter > timeDuration){
+            relayCounter = 0;
+            offStart = Math.round(Math.random() * (timeDuration - reductionTime));
+            offEnd = offStart + reductionTime;
+        } else{
+            relayCounter++;
+            //console.log(relayCounter + ', start = ' + offStart + ', stop = ' + offEnd);
+        }
+    }, 100);//change this to 1000 in final version
     
+    lcd.on('ready', function(){
+        setInterval(function(){
+            lcd.clear(function(){
+                lcd.setCursor(0, 0);
+                lcd.print(displayTop, function(){
+                    lcd.setCursor(0, 1);
+                    lcd.print(displayBottom);
+                });
+            });
+        }, 500);
+    });
     
+    setInterval(function() {
+        switch(menuState){
+            case 1:
+                displayTop = 'Current:';
+                adc.read(0, function(value){
+                    displayBottom = value;
+                });
+                break;
+            case 2:
+                displayTop = 'Temperature:';
+                    adc.read(1, function(value){
+                        displayBottom = value / 10;
+                    });
+                break;
+            case 3:
+                displayTop = 'IP Address:';
+                displayBottom = ipAddress;
+                break;
+            }
+    counter++;
+    }, 1000);
 }
 
 
@@ -100,7 +161,37 @@ async.series([
 
 ], init);
 
+button.watch(function(err, state){
+    if (state == 1){
+        if(menuState > 2){
+            menuState = 0;
+        }
+        menuState++;
+        console.log(menuState);
+    } else{
+    changeLED(menuState);
+    }
+});
 
+var changeLED = function(state) {
+    switch(state){
+        case 1:
+            led0.writeSync(1);
+            led1.writeSync(0);
+            led2.writeSync(0);
+            break;
+        case 2:
+            led0.writeSync(0);
+            led1.writeSync(1);
+            led2.writeSync(0);
+            break;
+        case 3:
+            led0.writeSync(0);
+            led1.writeSync(0);
+            led2.writeSync(1);
+            break;
+    }
+}
 
 
 
