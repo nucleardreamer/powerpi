@@ -2,6 +2,11 @@ var request = require('request'),
     _ = require('lodash'),
     async = require('async'),
 
+    reduction = 0.1,
+    menuState = 1,
+    ipAddress = 'unknown'
+    counter = 0,
+
     Gpio = require('onoff').Gpio,
     led0 = new Gpio(21, 'out'),
     led1 = new Gpio(16, 'out'),
@@ -28,12 +33,9 @@ var request = require('request'),
         rows:2
     }),
     displayTop = 'top',
-    displayBottom = 'bottom',
+    displayBottom = 'bottom';
     
-    reduction = 0.1,
-    menuState = 1,
-    ipAddress = 'unknown'
-    counter = 0;
+
 
 var read = {
     // this function will hold all operations that read from any sensor
