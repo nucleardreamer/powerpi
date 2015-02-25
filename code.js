@@ -1,6 +1,5 @@
-
-
 var request = require('request'),
+    _ = require('lodash'),
     async = require('async'),
 
     Gpio = require('onoff').Gpio,
