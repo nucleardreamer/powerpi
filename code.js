@@ -108,7 +108,7 @@ var init = function(){
             //console.log('****turn relay off****');
             } else{
                 relayState = 1;
-                relay.writeSync(relayState);
+                led0.writeSync(relayState);
                 led1.writeSync(0);
             }
         //main counter
