@@ -3,12 +3,17 @@
 var request = require('request'),
     async = require('async'),
 
-    gpio = require('rpi-gpio'),
-    buttonPin = 32,
-    led0Pin = 36,
-    led1Pin = 38,
-    led2Pin = 40,
-    ssrPin = 11,
+    Gpio = require('onoff').Gpio,
+    relay = new Gpio(21, 'out'),
+    led1 = new Gpio(16, 'out'),
+    led2 = new Gpio(20, 'out'),
+    timeDuration = 300,
+    reduction = 0.1,
+    reductionTime = Math.round(timeDuration * reduction),
+    offStart = 0,
+    offEnd = 0,
+    relayState = 1,
+    relayCounter = 0;
 
     Mcp3008 = require('mcp3008.js'),
     adc = new Mcp3008(),
@@ -17,15 +22,12 @@ var request = require('request'),
 
     Lcd = require('lcd'),
     lcd = new Lcd({
-        rs:25, 
-        e:24, 
-        data:[23, 17, 27, 22], 
-        cols:16, rows:2
-    }),
-
-    reduce = 0,
-    ssrOn = 0,
-    ssrOff = 0;
+    rs:22,
+    e:5,
+    data:[6, 13, 19, 26],
+    cols:16,
+    rows:2
+    });
 
 var read = {
     // this function will hold all operations that read from any sensor
@@ -36,7 +38,6 @@ var read = {
             // we were successful
             console.log('Data Read: ', value);
             cb(value);
-
         });
     },
     fromCurrentSensor: function(channelToRead, cb){
@@ -47,42 +48,9 @@ var read = {
             cb(value);
         });
     },
-    fromButton: function(channelToRead, cb){
-        gpio.read(channelToRead, function(err, value) {
-            console.log('Button Read: ' + value);
-            cb(value)
-        });
-    }
 }
 
 var write = {
-
-    toLcd: function(message){
-        // reset the LCD screen and print the new message
-        lcd.setCursor(0, 0);
-        lcd.print(message);
-    },
-
-    toLed: function(color, cb){
-        switch(color){
-            case 'red':
-                    
-                    break;
-            case 'green':
-                    
-                    break;
-            case 'blue':
-                    
-                    break;
-            default:
-                    
-        }
-    }
-    
-    toSSR: function(pulse){
-
-    }
-
     // function that will deal with sending any data up to the "cloud"
     // we will be doing a fire and forget, so we dont need a callback
     toServer: function(nodeValue, dataValue){
@@ -117,47 +85,20 @@ var write = {
 // main init function
 var init = function(){
 
-    // set a repeating anonymous function to run every second, this also keeps our script alive
+    // 1 second updates
     setInterval(function () {
-        // we can read from the button and see if we want to change anything
-        read.fromButton(buttonPin, function(buttonData){})
-        // execute the data read
         read.fromTempSensor(adc0, function(valueFromSensor){
-
-        // after its finished, lets print to the LCD and send to our server
-        // both operations will just happen at the same time, we wont wait for either to finish before we read and send again
-            write.toLcd(valueFromSensor);
             write.toServer(0, valueFromSensor);
-
         });
-
     }, 1000);
+    
+    
+    
 }
 
 
-// we will use async, because we want to wait for both functions to be finished before we init
-// basically, once the array of functions execute 'cb' (their callback), we will fire the next parameter, which is our init function
-// this is also good, because if either of the functions fails, it will hault the script
 async.series([
-    function(cb){
-        lcd.on('ready', cb)
-    },
-    function(cb){
-        //setup gpio pin for button
-        gpio.setup(buttonPin, gpio.DIR_IN, cb);
-    },
-    function(cb){
-        //setup gpio pin for led0
-        gpio.setup(led0Pin, gpio.DIR_OUT, cb);
-    },
-    function(cb){
-        //setup gpio pin for led1
-        gpio.setup(led1Pin, gpio.DIR_OUT, cb);
-    },
-    function(cb){
-        //setup gpio pin for led2
-        gpio.setup(led2Pin, gpio.DIR_OUT, cb);
-    },
+
 ], init);
 
 
