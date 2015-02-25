@@ -176,7 +176,7 @@ button.watch(function(err, state){
         menuState++;
         console.log(menuState);
     } else{
-    changeLED(menuState);
+    //changeLED(menuState);  //for debugging menu
     }
 });
 
