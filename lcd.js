@@ -37,7 +37,7 @@ lcd.on('ready', function(){
                 lcd.print(displayBottom);
             });
         });
-    }, 1000);
+    }, 500);
 });
 
 setInterval(function() {
