@@ -6,7 +6,7 @@ var request = require('request'),
     led0 = new Gpio(21, 'out'),
     led1 = new Gpio(16, 'out'),
     led2 = new Gpio(20, 'out'),
-    button = new GPIO(12, 'in', 'both'),
+    button = new Gpio(12, 'in', 'both'),
     timeDuration = 300,  //300 seconds = 5 minutes
     reductionTime = Math.round(timeDuration * reduction),
     offStart = 0,
