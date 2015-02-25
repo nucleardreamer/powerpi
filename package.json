@@ -1,0 +1,24 @@
+{
+  "name": "powerpi",
+  "version": "0.0.1",
+  "description": "Power grid node project",
+  "main": "lcd.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nucleardreamer/powerpi.git"
+  },
+  "author": "Cole Purbaugh, Flynn Joffray",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nucleardreamer/powerpi/issues"
+  },
+  "homepage": "https://github.com/nucleardreamer/powerpi",
+  "dependencies": {
+    "lcd": "^1.1.0",
+    "onoff": "^1.0.2",
+    "mcp3008.js": "*"
+  }
+}

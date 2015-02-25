@@ -2,7 +2,7 @@
 var Mcp3008 = require('mcp3008.js'),
 	adc = new Mcp3008();
 
-var Lcd = require('/root/node_modules/lcd'),
+var Lcd = require('lcd'),
 	lcd = new Lcd({
 		rs:22,
 		e:5,
