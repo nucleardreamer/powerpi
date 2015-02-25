@@ -158,6 +158,13 @@ var init = function(){
                 displayTop = 'IP Address:';
                 displayBottom = ipAddress;
                 break;
+            case 4:
+                displayTop = 'Time: ' + relayCounter;
+                displayBottom = 'Off: ' + offStart;
+                break;
+            default:
+                displayTop = 'default';
+                displayBottom = 'reached';
             }
     counter++;
     }, 1000);
@@ -170,7 +177,7 @@ async.series([
 
 button.watch(function(err, state){
     if (state == 1){
-        if(menuState > 2){
+        if(menuState > 3){
             menuState = 0;
         }
         menuState++;
