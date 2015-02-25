@@ -34,7 +34,12 @@ var request = require('request'),
     }),
     displayTop = 'top',
     displayBottom = 'bottom';
-    
+
+
+//clear prior led states
+led0.writeSync(0);
+led1.writeSync(0);
+led2.writeSync(0);    
 
 
 var read = {
