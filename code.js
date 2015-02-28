@@ -165,23 +165,25 @@ var init = function(){
             });
         }, 500);
     });
-
-    async.series([
-    
-    ], init);
-    
-    button.watch(function(err, state){
-        if (state == 1){
-            if(menuState > 3){
-                menuState = 0;
-            }
-            menuState++;
-            console.log(menuState);
-        } else{
-        //changeLED(menuState);  //for debugging menu
-        }
-    });
 }
+
+async.series([
+    //I have no idea what I am doing
+], init);
+
+    
+button.watch(function(err, state){
+    if (state == 1){
+        if(menuState > 3){
+            menuState = 0;
+        }
+        menuState++;
+        console.log(menuState);
+    } else{
+    //changeLED(menuState);  //for debugging menu
+    }
+});
+
 var changeLED = function(state) {
     switch(state){
         case 1:
