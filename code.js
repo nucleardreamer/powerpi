@@ -166,22 +166,22 @@ var init = function(){
         }, 500);
     });
 
-async.series([
-
-], init);
-
-button.watch(function(err, state){
-    if (state == 1){
-        if(menuState > 3){
-            menuState = 0;
+    async.series([
+    
+    ], init);
+    
+    button.watch(function(err, state){
+        if (state == 1){
+            if(menuState > 3){
+                menuState = 0;
+            }
+            menuState++;
+            console.log(menuState);
+        } else{
+        //changeLED(menuState);  //for debugging menu
         }
-        menuState++;
-        console.log(menuState);
-    } else{
-    //changeLED(menuState);  //for debugging menu
-    }
-});
-
+    });
+}
 var changeLED = function(state) {
     switch(state){
         case 1:
