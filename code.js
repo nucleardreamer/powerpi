@@ -4,8 +4,7 @@ var request = require('request'),
 
     reduction = 0.1,
     menuState = 1,
-    ipAddress = 'unknown'
-    counter = 0,
+    ipAddress = 'unknown',
 
     Gpio = require('onoff').Gpio,
     led0 = new Gpio(21, 'out'),
@@ -130,18 +129,8 @@ var init = function(){
     
     lcd.on('ready', function(){
         setInterval(function(){
-            lcd.clear(function(){
-                lcd.setCursor(0, 0);
-                lcd.print(displayTop, function(){
-                    lcd.setCursor(0, 1);
-                    lcd.print(displayBottom);
-                });
-            });
-        }, 500);
-    });
-    
-    setInterval(function() {
-        switch(menuState){
+            //change the menu to be displayed on top and bottom of lcd
+            switch(menuState){
             case 1:
                 displayTop = 'Current:';
                 adc.read(0, function(value){
@@ -166,10 +155,16 @@ var init = function(){
                 displayTop = 'default';
                 displayBottom = 'reached';
             }
-    counter++;
-    }, 1000);
-}
-
+            //update the displays on lcd
+            lcd.clear(function(){
+                lcd.setCursor(0, 0);
+                lcd.print(displayTop, function(){
+                    lcd.setCursor(0, 1);
+                    lcd.print(displayBottom);
+                });
+            });
+        }, 500);
+    });
 
 async.series([
 
