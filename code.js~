@@ -2,8 +2,6 @@ var request = require('request'),
     _ = require('lodash'),
     async = require('async'),
 
-    nodeNumber = 0,
-
     reduction = 0.1,
     menuState = 1,
     ipAddress = 'unknown',
@@ -101,7 +99,7 @@ var init = function(){
 
     setInterval(function () {
         read.fromTempSensor(adc0, function(valueFromSensor){
-            write.toServer(process.env.POWERPI || nodeNumber, valueFromSensor);
+            write.toServer(process.pid, valueFromSensor);
         });
     }, 1000);
     
