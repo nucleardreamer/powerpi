@@ -69,15 +69,15 @@ var read = {
         var toRecieveOptions = {
             url: serverUrl,
             method: "GET",
-            
+            json: true
         }
         // the actual request, with our options
-        request(toRecieveOptions, function(err){
+        request(toRecieveOptions, function(err, res, body){
             // show an error if it exists, otherwise do nothing
             if(err){
                 console.error(err);
             } else {
-                console.log('Data retrieved from server - ', 'gen: ' + json.wind, 'bspt: ' + json.basePt);
+                console.log('Data retrieved from server - ', 'gen: ' + body.wind, 'bspt: ' + body.basePt);
             }
         });
         
