@@ -123,6 +123,7 @@ var init = function(){
         read.fromTempSensor(adc0, function(valueFromSensor){
             write.toServer(process.env.POWERPI || nodeNumber, valueFromSensor);
         });
+        read.toServer();
     }, 1000);
     
     setInterval(function(){
