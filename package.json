@@ -4,7 +4,7 @@
   "description": "Power grid node project",
   "main": "lcd.js",
   "scripts": {
-    "start": "node code.js",
+    "start": "node code.js"
   },
   "repository": {
     "type": "git",
