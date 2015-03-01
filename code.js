@@ -62,6 +62,26 @@ var read = {
             cb(value);
         });
     },
+    
+    fromServer: function(){
+        var serverUrl = "http://power-meter.herokuapp.com/api/getLastWindReading";
+        // options needed in order to send
+        var toRecieveOptions = {
+            url: serverUrl,
+            method: "GET",
+            
+        }
+        // the actual request, with our options
+        request(toRecieveOptions, function(err){
+            // show an error if it exists, otherwise do nothing
+            if(err){
+                console.error(err);
+            } else {
+                console.log('Data retrieved from server - ', 'gen: ' + json.wind, 'bspt: ' + json.basePt);
+            }
+        });
+        
+    }
 }
 
 var write = {
