@@ -4,8 +4,10 @@ var request = require('request'),
 
     nodeNumber = 0,
 
-    reduction = 0.1,
+    reduction = 0,
     menuState = 1,
+    localWind = 0;
+    localBspt = 0;
     ipAddress = 'unknown',
 
     Gpio = require('onoff').Gpio,
@@ -14,7 +16,7 @@ var request = require('request'),
     led2 = new Gpio(20, 'out'),
     button = new Gpio(12, 'in', 'both'),
     timeDuration = 300,  //300 seconds = 5 minutes
-    reductionTime = Math.round(timeDuration * reduction),
+    reductionTime = 0,
     offStart = 0,
     offEnd = 0,
     relayState = 1,
@@ -77,6 +79,7 @@ var read = {
             if(err){
                 console.error(err);
             } else {
+		setReduction(body.wind, body.basePt);
                 console.log('Data retrieved from server - ', 'gen: ' + body.wind, 'bspt: ' + body.basePt);
             }
         });
@@ -119,6 +122,7 @@ var write = {
 // main init function
 var init = function(){
 
+    //server communication loop *******************************************************************************
     setInterval(function () {
         read.fromTempSensor(adc0, function(valueFromSensor){
             write.toServer(process.env.POWERPI || nodeNumber, valueFromSensor);
@@ -126,7 +130,13 @@ var init = function(){
         read.fromServer();
     }, 1000);
     
+
+    //realy loop **********************************************************************************************
     setInterval(function(){
+    
+    //update reduction time
+    reductionTime = Math.round(timeDuration * reduction);
+    
     //turns the relay on and off between the values offStart and offEnd
         if(relayCounter >= offStart && relayCounter <= offEnd){
             relayState = 0;
@@ -174,6 +184,10 @@ var init = function(){
                 displayTop = 'Time: ' + relayCounter;
                 displayBottom = 'Off: ' + offStart;
                 break;
+            case 5:
+                displayTop = 'Reduction: ' + reduction;
+                displayBottom = 'W: ' + localWind + '  B: ' + localBspt;
+                break;
             default:
                 displayTop = 'default';
                 displayBottom = 'reached';
@@ -197,7 +211,7 @@ async.series([
     
 button.watch(function(err, state){
     if (state == 1){
-        if(menuState > 3){
+        if(menuState > 4){
             menuState = 0;
         }
         menuState++;
@@ -225,6 +239,21 @@ var changeLED = function(state) {
             led2.writeSync(1);
             break;
     }
+}
+
+var setReduction = function(wind, base){
+	//sets local variables for LCD screen
+	localWind = wind;
+	localBspt = base;
+	//updates reduction command
+	if(wind > base){
+		reduction = 0;
+		console.log('reduction set to ' + reduction);//debug 
+	} else{
+		reduction = 0.2;
+		console.log('reduction set to ' + reduction);//debug 
+	}
+
 }
 
 
