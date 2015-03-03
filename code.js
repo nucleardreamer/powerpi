@@ -88,7 +88,7 @@ var write = {
     // function that will deal with sending any data up to the "cloud"
     // we will be doing a fire and forget, so we dont need a callback
     toServer: function(nodeValue, dataValue){
-        var serverUrl = "http://power-meter.herokuapp.com/node";
+        var serverUrl = "http://power-meter.herokuapp.com/api/node";
 
         // options needed in order to send
         var toSendOptions = {
