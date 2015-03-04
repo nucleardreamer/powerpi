@@ -11,10 +11,10 @@ var request = require('request'),
     ipAddress = 'unknown',
 
     Gpio = require('onoff').Gpio,
-    led0 = new Gpio(21, 'out'),
-    led1 = new Gpio(16, 'out'),
-    led2 = new Gpio(20, 'out'),
-    button = new Gpio(12, 'in', 'both'),
+    led0 = new Gpio(23, 'out'),
+    led1 = new Gpio(24, 'out'),
+    led2 = new Gpio(25, 'out'),
+    button = new Gpio(22, 'in', 'both'),
     timeDuration = 300,  //300 seconds = 5 minutes
     reductionTime = 0,
     offStart = 0,
@@ -29,7 +29,7 @@ var request = require('request'),
 
     Lcd = require('lcd'),
     lcd = new Lcd({
-        rs:22,
+        rs:17,
         e:5,
         data:[6, 13, 19, 26],
         cols:16,
@@ -38,12 +38,8 @@ var request = require('request'),
     displayTop = 'top',
     displayBottom = 'bottom';
 
-
 //clear prior led states
-led0.writeSync(0);
-led1.writeSync(0);
-led2.writeSync(0);    
-
+//changeLED(0);
 
 var read = {
     // this function will hold all operations that read from any sensor
@@ -138,15 +134,13 @@ var init = function(){
     reductionTime = Math.round(timeDuration * reduction);
     
     //turns the relay on and off between the values offStart and offEnd
-        if(relayCounter >= offStart && relayCounter <= offEnd){
+        if(relayCounter >= offStart && relayCounter <= offEnd && reduction > 0){
             relayState = 0;
-            led0.writeSync(relayState);
-            led1.writeSync(1);
+            changeLED(1);
             //console.log('****turn relay off****');
             } else{
                 relayState = 1;
-                led0.writeSync(relayState);
-                led1.writeSync(0);
+                changeLED(2);
             }
         //main counter
         //makes new random interval for every 5 minute cycle
@@ -223,23 +217,28 @@ button.watch(function(err, state){
 
 var changeLED = function(state) {
     switch(state){
-        case 1:
+	case 0: //nothing
+	    led0.writeSync(0);
+            led1.writeSync(0);
+            led2.writeSync(0);
+            break;
+        case 1: //red
             led0.writeSync(1);
             led1.writeSync(0);
             led2.writeSync(0);
             break;
-        case 2:
+        case 2: //blue
             led0.writeSync(0);
             led1.writeSync(1);
             led2.writeSync(0);
             break;
-        case 3:
+        case 3: //green
             led0.writeSync(0);
             led1.writeSync(0);
             led2.writeSync(1);
             break;
     }
-}
+};
 
 var setReduction = function(wind, base){
 	//sets local variables for LCD screen
@@ -254,7 +253,7 @@ var setReduction = function(wind, base){
 		console.log('reduction set to ' + reduction);//debug 
 	}
 
-}
+};
 
 
 
