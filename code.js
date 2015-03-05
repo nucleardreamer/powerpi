@@ -8,7 +8,7 @@ var request = require('request'),
     menuState = 1,
     localWind = 0;
     localBspt = 0;
-    ipAddress = 'unknown',
+    ipAddress = '10.156.34.10',
 
     Gpio = require('onoff').Gpio,
     led0 = new Gpio(23, 'out'),
@@ -26,6 +26,11 @@ var request = require('request'),
     adc = new Mcp3008(),
     adc0 = 0,
     adc1 = 1,
+    data_points = [];
+    currentCalc = [];
+    averageCurrent = 0;
+    currentArray = [];
+    runningTotal = 0;
 
     Lcd = require('lcd'),
     lcd = new Lcd({
@@ -45,14 +50,6 @@ var read = {
     // this function will hold all operations that read from any sensor
     // we will keep the variable scope localized to this closure, so that we can reuse it
     fromTempSensor: function(channelToRead, cb){
-        // initiate the read
-        adc.read(channelToRead, function (value) {
-            // we were successful
-            console.log('Data Read: ', value);
-            cb(value);
-        });
-    },
-    fromCurrentSensor: function(channelToRead, cb){
         // initiate the read
         adc.read(channelToRead, function (value) {
             // we were successful
@@ -120,9 +117,7 @@ var init = function(){
 
     //server communication loop *******************************************************************************
     setInterval(function () {
-        read.fromTempSensor(adc0, function(valueFromSensor){
-            write.toServer(process.env.POWERPI || nodeNumber, valueFromSensor);
-        });
+        write.toServer(process.env.POWERPI || nodeNumber, averageCurrent);
         read.fromServer();
     }, 1000);
     
@@ -130,10 +125,10 @@ var init = function(){
     //realy loop **********************************************************************************************
     setInterval(function(){
     
-    //update reduction time
-    reductionTime = Math.round(timeDuration * reduction);
+        //update reduction time
+        reductionTime = Math.round(timeDuration * reduction);
     
-    //turns the relay on and off between the values offStart and offEnd
+        //turns the relay on and off between the values offStart and offEnd
         if(relayCounter >= offStart && relayCounter <= offEnd && reduction > 0){
             relayState = 0;
             changeLED(1);
@@ -154,6 +149,36 @@ var init = function(){
         }
     }, 100);//change this to 1000 in final version
     
+
+    setInterval( function(){
+	if (data_points.length < 5){
+		adc.read(adc0, function(digReading){
+			//console.log(Math.abs(digReading-530));
+			primaryCurrent = Math.abs((digReading-530)*(5/1024)*(1/0.066));
+			//console.log("Primary Current Sample: " + primaryCurrent.toFixed(2));
+			data_points.push(primaryCurrent);
+		});
+		
+	} else { 
+		
+		for (i = 0; i < 4; i++){
+			currentCalc.push(Math.sqrt(data_points[i]*data_points[i]+data_points[i+1]*data_points[i+1])/Math.sqrt(2));
+		}
+	
+		for (i = 0; i < 4; i++){
+			runningTotal = runningTotal + currentCalc[i];	
+		}
+		averageCurrent = runningTotal/4;
+		currentArray.push((averageCurrent).toFixed(3));
+		runningTotal = 0;
+		currentCalc = [];
+		data_points = [];
+	}
+	
+
+    }, 4.166);
+
+
     lcd.on('ready', function(){
         setInterval(function(){
             //change the menu to be displayed on top and bottom of lcd
@@ -194,7 +219,7 @@ var init = function(){
                     lcd.print(displayBottom);
                 });
             });
-        }, 500);
+        }, 1000);
     });
 }
 
