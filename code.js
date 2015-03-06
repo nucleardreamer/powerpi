@@ -280,7 +280,5 @@ var setReduction = function(wind, base){
 
 };
 
-
-
-
-
+var Reporter = require('./node_socket');
+var reporter = new Reporter(nodeNumber);

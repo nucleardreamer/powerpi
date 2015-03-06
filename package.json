@@ -22,6 +22,7 @@
     "lodash": "^3.3.1",
     "mcp3008.js": "*",
     "onoff": "^1.0.2",
+    "socket.io-client": "^1.3.5",
     "request": "^2.53.0"
   }
 }
