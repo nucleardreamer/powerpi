@@ -1,17 +1,21 @@
 var request = require('request'),
     _ = require('lodash'),
-    async = require('async'),
+    async = require('async');
 
-    nodeNumber = 0,
-
+var nodeNumber = 0,
     reduction = 0,
     menuState = 1,
-    localWind = 0;
+    localWind = 0,
     localBspt = 0;
-    ipAddress = '10.156.34.10',
 
-    Gpio = require('onoff').Gpio,
-    led0 = new Gpio(23, 'out'),
+var ipAddress = null;
+require('dns').lookup(require('os').hostname(), function (err, add) {
+    ipAddress = add;
+});
+
+var Gpio = require('onoff').Gpio;
+
+var led0 = new Gpio(23, 'out'),
     led1 = new Gpio(24, 'out'),
     led2 = new Gpio(25, 'out'),
     button = new Gpio(22, 'in', 'both'),
@@ -22,8 +26,9 @@ var request = require('request'),
     relayState = 1,
     relayCounter = 0;
 
-    Mcp3008 = require('mcp3008.js'),
-    adc = new Mcp3008(),
+var Mcp3008 = require('mcp3008.js');
+
+var adc = new Mcp3008(),
     adc0 = 0,
     adc1 = 1,
     data_points = [];
@@ -32,8 +37,8 @@ var request = require('request'),
     currentArray = [];
     runningTotal = 0;
 
-    Lcd = require('lcd'),
-    lcd = new Lcd({
+var Lcd = require('lcd');
+var lcd = new Lcd({
         rs:17,
         e:5,
         data:[6, 13, 19, 26],
@@ -78,7 +83,7 @@ var read = {
         });
         
     }
-}
+};
 
 var write = {
     // function that will deal with sending any data up to the "cloud"
@@ -98,7 +103,7 @@ var write = {
                     data: dataValue
                 }
             }
-        }
+        };
 
         // the actual request, with our options
         request(toSendOptions, function(err){
@@ -110,7 +115,7 @@ var write = {
             }
         });
     }
-}
+};
 
 // main init function
 var init = function(){
@@ -221,7 +226,7 @@ var init = function(){
             });
         }, 1000);
     });
-}
+};
 
 async.series([
     //I have no idea what I am doing
