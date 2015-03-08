@@ -1,7 +1,8 @@
 var nodeNumber = process.env.POWERPI || 0;
 
 // server connection
-var Reporter = require('./node_socket');
+var path = require('path');
+var Reporter = require(path.join(__dirname, 'lib', 'node_socket'));
 var reporter = new Reporter(nodeNumber);
 var io = reporter.io;
 
