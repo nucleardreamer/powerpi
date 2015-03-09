@@ -9,12 +9,14 @@ NAME="powerpi"
 NODE_BIN_DIR="/usr/local/bin"
 NODE_PATH="/usr/local/lib/node_modules"
 APPLICATION_DIRECTORY="/node/powerpi"
-APPLICATION_START="code.js -daemon"
-PIDFILE="/var/run/powerpi.pid"
+APPLICATION_START="code.js"
+PIDFILE="/run/powerpi.pid"
 LOGFILE="/var/log/powerpi.log"
+FOREVER_DIR="/root/.forever"
 
 PATH=$NODE_BIN_DIR:$PATH
 export NODE_PATH=$NODE_PATH
+export FOREVER_ROOT=$FOREVER_DIR
 
 start() {
     echo "Starting $NAME"
@@ -27,7 +29,7 @@ start() {
 stop() {
     if [ -f $PIDFILE ]; then
         echo "Shutting down $NAME"
-        forever stop $APPLICATION_START
+        forever stopall
         rm -f $PIDFILE
         RETVAL=$?
     else
