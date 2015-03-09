@@ -1,5 +1,7 @@
 var nodeNumber = process.env.POWERPI || 1;
 
+console.log('NODE NUMBER STARTED', nodeNumber);
+
 // server connection
 var path = require('path');
 var Reporter = require(path.join(__dirname, 'lib', 'node_socket'));
