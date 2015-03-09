@@ -39,11 +39,11 @@ var Mcp3008 = require('mcp3008.js');
 var adc = new Mcp3008(),
     adc0 = 0,
     adc1 = 1,
-    data_points = [];
-    currentCalc = [];
-    averageCurrent = 0;
-    currentArray = [];
-    runningTotal = 0;
+    data = [], // 4 cos sampling data points
+    ampCount = 0,
+    offset = 512, // 2.5V offset for the Hall Effect Sensor
+    avgCurrent = 0;
+
 
 var Lcd = require('lcd');
 var lcd = new Lcd({
@@ -56,9 +56,6 @@ var lcd = new Lcd({
     displayTop = 'top',
     displayBottom = 'bottom';
 
-//clear prior led states
-//changeLED(0);
-
 var read = {
     // this function will hold all operations that read from any sensor
     // we will keep the variable scope localized to this closure, so that we can reuse it
@@ -66,7 +63,7 @@ var read = {
         // initiate the read
         adc.read(channelToRead, function (value) {
             // we were successful
-            console.log('Data Read: ', value);
+            //console.log('Data Read: ', value);
             cb(value);
         });
     },
@@ -114,14 +111,14 @@ var init = function(){
 
     //server communication loop *******************************************************************************
     setInterval(function () {
-        write.toServer(nodeNumber, averageCurrent, adc1);
+        testCurrent();
+        write.toServer(nodeNumber, avgCurrent, adc1);
         read.fromServer();
     }, 1000);
     
 
-	/* 
-	relay loop
-	*/
+	//relay loop******************************************
+	
     setInterval(function(){
     
         //update reduction time
@@ -150,35 +147,7 @@ var init = function(){
         }
     }, 100);//change this to 1000 in final version
     
-
-    setInterval( function(){
-	if (data_points.length < 5){
-		adc.read(adc0, function(digReading){
-			//console.log(Math.abs(digReading-530));
-			primaryCurrent = Math.abs((digReading-530)*(5/1024)*(1/0.066));
-			//console.log("Primary Current Sample: " + primaryCurrent.toFixed(2));
-			data_points.push(primaryCurrent);
-		});
-		
-	} else { 
-		
-		for (i = 0; i < 4; i++){
-			currentCalc.push(Math.sqrt(data_points[i]*data_points[i]+data_points[i+1]*data_points[i+1])/Math.sqrt(2));
-		}
-	
-		for (i = 0; i < 4; i++){
-			runningTotal = runningTotal + currentCalc[i];	
-		}
-		averageCurrent = runningTotal/4;
-		currentArray.push((averageCurrent).toFixed(3));
-		runningTotal = 0;
-		currentCalc = [];
-		data_points = [];
-	}
-	
-
-    }, 4.166);
-
+    
 
     lcd.on('ready', function(){
         setInterval(function(){
@@ -241,6 +210,25 @@ button.watch(function(err, state){
     }
 });
 
+var testCurrent = function(){   
+
+    if(ampCount){
+        setTimeout(function(){
+            adc.read(0, function(value){
+                data.push((value-offset)*(5/1024)*(1/0.066));
+            });
+            ampCount--;
+            testCurrent();
+        }, 1);
+    } else {
+        //console.log('this is the data', data);
+        avgCurrent = Math.sqrt((Math.pow(data[0], 2)+Math.pow(data[1], 2)+Math.pow(data[2], 2)+Math.pow(data[3], 2)))/4;
+        avgCurrent = avgCurrent.toFixed(3);
+        data = [];
+        ampCount = 4;
+    }
+}
+
 var changeLED = function(state) {
     switch(state){
 	case 0: //nothing
@@ -280,5 +268,3 @@ var setReduction = function(wind, base){
 	}
 
 };
-
-
