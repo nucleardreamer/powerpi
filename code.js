@@ -1,4 +1,4 @@
-var nodeNumber = process.env.POWERPI || 0;
+var nodeNumber = process.env.POWERPI || 1;
 
 // server connection
 var path = require('path');
@@ -42,7 +42,8 @@ var adc = new Mcp3008(),
     data = [], // 4 cos sampling data points
     ampCount = 0,
     offset = 512, // 2.5V offset for the Hall Effect Sensor
-    avgCurrent = 0;
+    avgCurrent = 0
+    avgWatts = 0;
 
 
 var Lcd = require('lcd');
@@ -94,6 +95,7 @@ var write = {
     // function that will deal with sending any data up to the "cloud"
     // we will be doing a fire and forget, so we dont need a callback
     toServer: function(nodeValue, dataValue, tempValue){
+console.log(arguments)
         io.emit('putNodeData', {
             nodeNumber: String(nodeValue),
             reading: {
@@ -112,7 +114,7 @@ var init = function(){
     //server communication loop *******************************************************************************
     setInterval(function () {
         testCurrent();
-        write.toServer(nodeNumber, avgCurrent, adc1);
+        write.toServer(nodeNumber, avgWatts, adc1);
         read.fromServer();
     }, 1000);
     
@@ -204,7 +206,7 @@ button.watch(function(err, state){
             menuState = 0;
         }
         menuState++;
-        console.log(menuState);
+        //console.log(menuState);
     } else{
     //changeLED(menuState);  //for debugging menu
     }
@@ -223,7 +225,8 @@ var testCurrent = function(){
     } else {
         //console.log('this is the data', data);
         avgCurrent = Math.sqrt((Math.pow(data[0], 2)+Math.pow(data[1], 2)+Math.pow(data[2], 2)+Math.pow(data[3], 2)))/4;
-        avgCurrent = avgCurrent.toFixed(3);
+        avgWatts = avgCurrent.toFixed(3)*120;
+	console.log('avgWatts', avgWatts);
         data = [];
         ampCount = 4;
     }
