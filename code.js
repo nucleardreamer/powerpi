@@ -1,4 +1,4 @@
-var nodeNumber = process.env.POWERPI || 1;
+var nodeNumber = process.env.POWERPI || 0;
 
 console.log('NODE NUMBER STARTED', nodeNumber);
 

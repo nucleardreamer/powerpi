@@ -14,9 +14,12 @@ PIDFILE="/run/powerpi.pid"
 LOGFILE="/var/log/powerpi.log"
 FOREVER_DIR="/root/.forever"
 
+NODE_NUMBER="1"
+
 PATH=$NODE_BIN_DIR:$PATH
 export NODE_PATH=$NODE_PATH
 export FOREVER_ROOT=$FOREVER_DIR
+export POWERPI=$NODE_NUMBER
 
 start() {
     echo "Starting $NAME"
