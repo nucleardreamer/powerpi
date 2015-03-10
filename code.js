@@ -43,7 +43,7 @@ var adc = new Mcp3008(),
     adc1 = 1,
     data = [], // 4 cos sampling data points
     ampCount = 0,
-    offset = 512, // 2.5V offset for the Hall Effect Sensor
+    offset = 510, // 2.5V offset for the Hall Effect Sensor
     avgCurrent = 0
     avgWatts = 0;
 
@@ -97,18 +97,18 @@ var write = {
     // function that will deal with sending any data up to the "cloud"
     // we will be doing a fire and forget, so we dont need a callback
     toServer: function(nodeValue, dataValue, tempValue){
-console.log(arguments)
-        io.emit('putNodeData', {
-            nodeNumber: String(nodeValue),
-            reading: {
-                time: new Date().getTime(),
-                data: dataValue,
-                temp: tempValue
-            }
-        })
-
-    }
-};
+	console.log(arguments)
+	        io.emit('putNodeData', {
+	            nodeNumber: String(nodeValue),
+	            reading: {
+	                time: new Date().getTime(),
+	                data: dataValue,
+	                temp: tempValue
+	            }
+	        })
+	
+	    }
+	};
 
 // main init function
 var init = function(){
@@ -158,15 +158,13 @@ var init = function(){
             //change the menu to be displayed on top and bottom of lcd
             switch(menuState){
             case 1:
-                displayTop = 'Current:';
-                adc.read(0, function(value){
-                    displayBottom = value;
-                });
+                displayTop = 'Watts:';
+                displayBottom = avgWatts;
                 break;
             case 2:
-                displayTop = 'Temperature:';
+                displayTop = 'Reduction:';
                     adc.read(1, function(value){
-                        displayBottom = value / 10;
+                        displayBottom = reduction;
                     });
                 break;
             case 3:
@@ -178,8 +176,8 @@ var init = function(){
                 displayBottom = 'Off: ' + offStart;
                 break;
             case 5:
-                displayTop = 'Reduction: ' + reduction;
-                displayBottom = 'W: ' + localWind + '  B: ' + localBspt;
+                displayTop = 'Gen: ' + localWind;
+                displayBottom = 'For: ' + localBspt;
                 break;
             default:
                 displayTop = 'default';
@@ -223,12 +221,13 @@ var testCurrent = function(){
             });
             ampCount--;
             testCurrent();
-        }, 1);
+        }, 4.167);
     } else {
         //console.log('this is the data', data);
-        avgCurrent = Math.sqrt((Math.pow(data[0], 2)+Math.pow(data[1], 2)+Math.pow(data[2], 2)+Math.pow(data[3], 2)))/4;
-        avgWatts = avgCurrent.toFixed(3)*120;
-	console.log('avgWatts', avgWatts);
+        avgCurrent = (Math.sqrt(Math.pow(data[0], 2)+Math.pow(data[1], 2))/Math.sqrt(2)+Math.sqrt(Math.pow(data[2], 2)+Math.pow(data[3], 2))/Math.sqrt(2))/2;
+        //console.log('avgCurrent', avgCurrent);
+	avgWatts = Math.round(avgCurrent)*120;
+	//console.log('avgWatts', avgWatts);
         data = [];
         ampCount = 4;
     }
