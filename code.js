@@ -9,8 +9,7 @@ var reporter = new Reporter(nodeNumber);
 var io = reporter.io;
 
 var request = require('request'),
-    _ = require('lodash'),
-    async = require('async');
+    _ = require('lodash');
 
 var reduction = 0,
     menuState = 1,
@@ -44,7 +43,7 @@ var adc = new Mcp3008(),
     data = [], // 4 cos sampling data points
     ampCount = 0,
     offset = 510, // 2.5V offset for the Hall Effect Sensor
-    avgCurrent = 0
+    avgCurrent = 0,
     avgWatts = 0;
 
 
@@ -78,7 +77,7 @@ var read = {
             url: serverUrl,
             method: "GET",
             json: true
-        }
+        };
         // the actual request, with our options
         request(toRecieveOptions, function(err, res, body){
             // show an error if it exists, otherwise do nothing
@@ -90,6 +89,25 @@ var read = {
             }
         });
         
+    },
+    current: function(){
+        if(ampCount){
+            setTimeout(function(){
+                adc.read(0, function(value){
+                    data.push((value-offset)*(5/1024)*(1/0.066));
+                });
+                ampCount--;
+                read.current();
+            }, 4.167);
+        } else {
+            //console.log('this is the data', data);
+            avgCurrent = (Math.sqrt(Math.pow(data[0], 2)+Math.pow(data[1], 2))/Math.sqrt(2)+Math.sqrt(Math.pow(data[2], 2)+Math.pow(data[3], 2))/Math.sqrt(2))/2;
+            //console.log('avgCurrent', avgCurrent);
+            avgWatts = Math.round(avgCurrent)*120;
+            //console.log('avgWatts', avgWatts);
+            data = [];
+            ampCount = 4;
+        }
     }
 };
 
@@ -97,91 +115,106 @@ var write = {
     // function that will deal with sending any data up to the "cloud"
     // we will be doing a fire and forget, so we dont need a callback
     toServer: function(nodeValue, dataValue, tempValue){
-	console.log(arguments)
-	        io.emit('putNodeData', {
-	            nodeNumber: String(nodeValue),
-	            reading: {
-	                time: new Date().getTime(),
-	                data: dataValue,
-	                temp: tempValue
-	            }
-	        })
+
+        io.emit('putNodeData', {
+            nodeNumber: String(nodeValue),
+            reading: {
+                time: new Date().getTime(),
+                data: dataValue,
+                temp: tempValue
+            }
+        })
 	
-	    }
-	};
+    }
+};
 
 // main init function
 var init = function(){
 
-    //server communication loop *******************************************************************************
-    setInterval(function () {
-        testCurrent();
-        write.toServer(nodeNumber, avgWatts, adc1);
-        read.fromServer();
-    }, 1000);
-    
+    /*
+        server communication loop
+    */
+    function serverLoop(){
+        var _serverLoop = setInterval(function () {
+            read.fromServer();
+            read.current();
+            write.toServer(nodeNumber, avgWatts, adc1);
+            clearInterval(_serverLoop);
+            serverLoop();
+        }, 1000);
+    }
+    serverLoop();
 
-	//relay loop******************************************
-	
-    setInterval(function(){
-    
-        //update reduction time
-        reductionTime = Math.round(timeDuration * reduction);
 
-        //turns the relay on and off between the values offStart and offEnd
-        if(relayCounter >= offStart && relayCounter <= offEnd && reduction > 0){
-            relayState = 0;
-            changeLED(3);
-            relay.writeSync(1);
-            //console.log('****turn relay off****');
-        } else{
+    /*
+        relay loop
+    */
+	function relayLoop(){
+        var _relayLoop = setInterval(function(){
+
+            //update reduction time
+            reductionTime = Math.round(timeDuration * reduction);
+
+            //turns the relay on and off between the values offStart and offEnd
+            if(relayCounter >= offStart && relayCounter <= offEnd && reduction > 0){
+                relayState = 0;
+                changeLED(3);
+                relay.writeSync(1);
+                //console.log('****turn relay off****');
+            } else{
                 relayState = 1;
                 changeLED(2);
                 relay.writeSync(0);
-        }
-        //main counter
-        //makes new random interval for every 5 minute cycle
-        if(relayCounter > timeDuration){
-            relayCounter = 0;
-            offStart = Math.round(Math.random() * (timeDuration - reductionTime));
-            offEnd = offStart + reductionTime;
-        } else{
-            relayCounter++;
-            //console.log(relayCounter + ', start = ' + offStart + ', stop = ' + offEnd);
-        }
-    }, 100);//change this to 1000 in final version
-    
-    
+            }
+            //main counter
+            //makes new random interval for every 5 minute cycle
+            if(relayCounter > timeDuration){
+                relayCounter = 0;
+                offStart = Math.round(Math.random() * (timeDuration - reductionTime));
+                offEnd = offStart + reductionTime;
+            } else{
+                relayCounter++;
+                //console.log(relayCounter + ', start = ' + offStart + ', stop = ' + offEnd);
+            }
+            clearInterval(_relayLoop);
+            relayLoop();
+        }, 100);//change this to 1000 in final version
+    }
+    relayLoop();
 
-    lcd.on('ready', function(){
-        setInterval(function(){
+
+    /*
+        LCD loop
+    */
+    function lcdLoop(){
+        var _lcdLoop = setInterval(function(){
             //change the menu to be displayed on top and bottom of lcd
             switch(menuState){
-            case 1:
-                displayTop = 'Watts:';
-                displayBottom = avgWatts;
-                break;
-            case 2:
-                displayTop = 'Reduction:';
+                case 1:
+                    displayTop = 'Watts:';
+                    displayBottom = avgWatts;
+                    break;
+                case 2:
+                    displayTop = 'Reduction:';
                     adc.read(1, function(value){
                         displayBottom = reduction;
                     });
-                break;
-            case 3:
-                displayTop = 'IP Address:';
-                displayBottom = ipAddress;
-                break;
-            case 4:
-                displayTop = 'Time: ' + relayCounter;
-                displayBottom = 'Off: ' + offStart;
-                break;
-            case 5:
-                displayTop = 'Gen: ' + localWind;
-                displayBottom = 'For: ' + localBspt;
-                break;
-            default:
-                displayTop = 'default';
-                displayBottom = 'reached';
+                    break;
+                case 3:
+                    displayTop = 'IP Address:';
+                    displayBottom = ipAddress;
+                    break;
+                case 4:
+                    displayTop = 'Time: ' + relayCounter;
+                    displayBottom = 'Off: ' + offStart;
+                    break;
+                case 5:
+                    displayTop = 'Gen: ' + localWind;
+                    displayBottom = 'For: ' + localBspt;
+                    break;
+                default:
+                    displayTop = 'default';
+                    displayBottom = 'reached';
             }
             //update the displays on lcd
             lcd.clear(function(){
@@ -191,15 +224,16 @@ var init = function(){
                     lcd.print(displayBottom);
                 });
             });
+            clearInterval(_lcdLoop);
+            lcdLoop();
         }, 1000);
+    }
+
+    lcd.on('ready', function(){
+        lcdLoop();
     });
 };
 
-async.series([
-    //I have no idea what I am doing
-], init);
-
-    
 button.watch(function(err, state){
     if (state == 1){
         if(menuState > 4){
@@ -211,27 +245,6 @@ button.watch(function(err, state){
     //changeLED(menuState);  //for debugging menu
     }
 });
-
-var testCurrent = function(){   
-
-    if(ampCount){
-        setTimeout(function(){
-            adc.read(0, function(value){
-                data.push((value-offset)*(5/1024)*(1/0.066));
-            });
-            ampCount--;
-            testCurrent();
-        }, 4.167);
-    } else {
-        //console.log('this is the data', data);
-        avgCurrent = (Math.sqrt(Math.pow(data[0], 2)+Math.pow(data[1], 2))/Math.sqrt(2)+Math.sqrt(Math.pow(data[2], 2)+Math.pow(data[3], 2))/Math.sqrt(2))/2;
-        //console.log('avgCurrent', avgCurrent);
-	avgWatts = Math.round(avgCurrent)*120;
-	//console.log('avgWatts', avgWatts);
-        data = [];
-        ampCount = 4;
-    }
-}
 
 var changeLED = function(state) {
     switch(state){
@@ -272,3 +285,5 @@ var setReduction = function(wind, base){
 	}
 
 };
+
+init();

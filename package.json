@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/nucleardreamer/powerpi",
   "dependencies": {
-    "async": "^0.9.0",
     "lcd": "^1.1.0",
     "lodash": "^3.3.1",
     "mcp3008.js": "*",
