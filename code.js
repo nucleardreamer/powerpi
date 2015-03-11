@@ -15,11 +15,8 @@ var reduction = 0,
     menuState = 1,
     localWind = 0,
     localBspt = 0;
-
-var ipAddress = null;
-require('dns').lookup(require('os').hostname(), function (err, add) {
-    ipAddress = add;
-});
+var ip = require('ip'),
+    ipAddress = ip.address();
 
 var Gpio = require('onoff').Gpio;
 
